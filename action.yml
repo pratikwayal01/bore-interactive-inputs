@@ -1,0 +1,166 @@
+name: 'Bore Interactive Inputs'
+description: 'Enable dynamic runtime inputs for GitHub Actions using self-hosted bore tunnel'
+author: 'Your Name'
+
+branding:
+  icon: 'terminal'
+  color: 'blue'
+
+inputs:
+  title:
+    description: 'The title of the interactive inputs form'
+    required: false
+    default: 'Interactive Inputs'
+  
+  interactive:
+    description: 'The representation (in yaml) of fields to be displayed'
+    required: true
+    default: |
+      fields:
+        - label: example-text
+          properties:
+            display: Enter some text
+            type: text
+            description: A simple text input
+            required: true
+  
+  timeout:
+    description: 'The timeout in seconds for the interactive inputs form'
+    required: false
+    default: '300'
+  
+  bore-server:
+    description: 'The address of the bore server (e.g., bore.pub or your self-hosted server)'
+    required: true
+    default: 'bore.pub'
+  
+  bore-port:
+    description: 'Optional specific port to request on the bore server'
+    required: false
+    default: '0'
+  
+  bore-secret:
+    description: 'Optional secret for authentication with bore server'
+    required: false
+    default: ''
+  
+  github-token:
+    description: 'The token used to authenticate with GitHub API'
+    required: true
+    default: ${{ github.token }}
+  
+  notifier-slack-enabled:
+    description: 'Whether to send a notification to Slack'
+    required: false
+    default: 'false'
+  
+  notifier-slack-token:
+    description: 'The token used to authenticate with Slack API'
+    required: false
+    default: ''
+  
+  notifier-slack-channel:
+    description: 'The channel to send the notification to'
+    required: false
+    default: '#notifications'
+  
+  notifier-slack-thread-ts:
+    description: 'The timestamp of the message to reply to in the thread'
+    required: false
+    default: ''
+  
+  notifier-slack-bot:
+    description: 'The name of the bot to send the notification as'
+    required: false
+    default: 'Bore Interactive Inputs'
+  
+  notifier-discord-enabled:
+    description: 'Whether to send a notification to Discord'
+    required: false
+    default: 'false'
+  
+  notifier-discord-webhook:
+    description: 'The webhook URL used to send notifications to Discord'
+    required: false
+    default: ''
+  
+  notifier-discord-thread-id:
+    description: 'The ID of the Discord thread the message should be sent to'
+    required: false
+    default: ''
+  
+  notifier-discord-username:
+    description: 'The username to send the notifications as'
+    required: false
+    default: 'Bore Interactive Inputs'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+    
+    - name: Install Python dependencies
+      shell: bash
+      run: |
+        pip install --break-system-packages flask pyyaml requests
+    
+    - name: Install bore client
+      shell: bash
+      run: |
+        # Download and install bore CLI
+        BORE_VERSION="0.6.0"
+        ARCH=$(uname -m)
+        OS=$(uname -s | tr '[:upper:]' '[:lower:]')
+        
+        if [ "$ARCH" = "x86_64" ]; then
+          ARCH="x86_64"
+        elif [ "$ARCH" = "aarch64" ] || [ "$ARCH" = "arm64" ]; then
+          ARCH="aarch64"
+        fi
+        
+        if [ "$OS" = "darwin" ]; then
+          OS="apple-darwin"
+        else
+          OS="unknown-linux-musl"
+        fi
+        
+        DOWNLOAD_URL="https://github.com/ekzhang/bore/releases/download/v${BORE_VERSION}/bore-v${BORE_VERSION}-${ARCH}-${OS}.tar.gz"
+        
+        echo "Downloading bore from: $DOWNLOAD_URL"
+        curl -L "$DOWNLOAD_URL" -o bore.tar.gz
+        tar -xzf bore.tar.gz
+        chmod +x bore
+        sudo mv bore /usr/local/bin/
+        rm bore.tar.gz
+        
+        bore --version
+    
+    - name: Run Interactive Inputs Server
+      shell: bash
+      env:
+        INPUT_TITLE: ${{ inputs.title }}
+        INPUT_INTERACTIVE: ${{ inputs.interactive }}
+        INPUT_TIMEOUT: ${{ inputs.timeout }}
+        INPUT_BORE_SERVER: ${{ inputs.bore-server }}
+        INPUT_BORE_PORT: ${{ inputs.bore-port }}
+        INPUT_BORE_SECRET: ${{ inputs.bore-secret }}
+        INPUT_GITHUB_TOKEN: ${{ inputs.github-token }}
+        INPUT_NOTIFIER_SLACK_ENABLED: ${{ inputs.notifier-slack-enabled }}
+        INPUT_NOTIFIER_SLACK_TOKEN: ${{ inputs.notifier-slack-token }}
+        INPUT_NOTIFIER_SLACK_CHANNEL: ${{ inputs.notifier-slack-channel }}
+        INPUT_NOTIFIER_SLACK_THREAD_TS: ${{ inputs.notifier-slack-thread-ts }}
+        INPUT_NOTIFIER_SLACK_BOT: ${{ inputs.notifier-slack-bot }}
+        INPUT_NOTIFIER_DISCORD_ENABLED: ${{ inputs.notifier-discord-enabled }}
+        INPUT_NOTIFIER_DISCORD_WEBHOOK: ${{ inputs.notifier-discord-webhook }}
+        INPUT_NOTIFIER_DISCORD_THREAD_ID: ${{ inputs.notifier-discord-thread-id }}
+        INPUT_NOTIFIER_DISCORD_USERNAME: ${{ inputs.notifier-discord-username }}
+        GITHUB_REPOSITORY: ${{ github.repository }}
+        GITHUB_RUN_ID: ${{ github.run_id }}
+        GITHUB_RUN_NUMBER: ${{ github.run_number }}
+        GITHUB_WORKFLOW: ${{ github.workflow }}
+        GITHUB_SERVER_URL: ${{ github.server_url }}
+      run: |
+        python ${{ github.action_path }}/src/main.py

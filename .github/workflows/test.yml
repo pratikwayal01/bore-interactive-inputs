@@ -1,0 +1,136 @@
+name: Test Bore Interactive Inputs
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test-all-field-types:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Interactive Inputs Test
+        id: interactive
+        uses: ./  # Replace with yourusername/bore-interactive-inputs@v1 when published
+        with:
+          bore-server: 'bore.pub'
+          timeout: 300
+          title: 'Test All Field Types'
+          interactive: |
+            fields:
+              - label: text-input
+                properties:
+                  display: Text Input
+                  type: text
+                  description: Enter some text
+                  placeholder: Type here...
+                  maxLength: 100
+                  required: true
+              
+              - label: textarea-input
+                properties:
+                  display: Textarea Input
+                  type: textarea
+                  description: Enter multiple lines of text
+                  placeholder: Type multiple lines...
+                  maxLength: 500
+              
+              - label: number-input
+                properties:
+                  display: Number Input
+                  type: number
+                  description: Enter a number between 1 and 100
+                  minNumber: 1
+                  maxNumber: 100
+                  required: true
+              
+              - label: boolean-input
+                properties:
+                  display: Boolean Input
+                  type: boolean
+                  description: Check this box
+                  defaultValue: false
+              
+              - label: select-input
+                properties:
+                  display: Select Input
+                  type: select
+                  description: Choose one option
+                  choices:
+                    - Option A
+                    - Option B
+                    - Option C
+                  required: true
+              
+              - label: multiselect-input
+                properties:
+                  display: Multi-Select Input
+                  type: multiselect
+                  description: Choose multiple options
+                  choices:
+                    - Feature 1
+                    - Feature 2
+                    - Feature 3
+                    - Feature 4
+              
+              - label: file-input
+                properties:
+                  display: File Upload
+                  type: file
+                  description: Upload a single file
+                  acceptedFileTypes:
+                    - image/*
+                    - application/pdf
+              
+              - label: multifile-input
+                properties:
+                  display: Multiple Files Upload
+                  type: multifile
+                  description: Upload multiple files
+                  acceptedFileTypes:
+                    - text/*
+                    - application/json
+          
+          # Uncomment to enable Slack notifications
+          # notifier-slack-enabled: "true"
+          # notifier-slack-token: ${{ secrets.SLACK_TOKEN }}
+          # notifier-slack-channel: "#testing"
+          
+          # Uncomment to enable Discord notifications
+          # notifier-discord-enabled: "true"
+          # notifier-discord-webhook: ${{ secrets.DISCORD_WEBHOOK }}
+      
+      - name: Display All Outputs
+        run: |
+          echo "========================================="
+          echo "All Outputs:"
+          echo "========================================="
+          echo "Text Input: ${{ steps.interactive.outputs.text-input }}"
+          echo "Textarea Input: ${{ steps.interactive.outputs.textarea-input }}"
+          echo "Number Input: ${{ steps.interactive.outputs.number-input }}"
+          echo "Boolean Input: ${{ steps.interactive.outputs.boolean-input }}"
+          echo "Select Input: ${{ steps.interactive.outputs.select-input }}"
+          echo "Multi-Select Input: ${{ steps.interactive.outputs.multiselect-input }}"
+          echo "File Input Path: ${{ steps.interactive.outputs.file-input }}"
+          echo "Multi-File Input Path: ${{ steps.interactive.outputs.multifile-input }}"
+          echo "========================================="
+      
+      - name: Process Uploaded Files
+        run: |
+          echo "Processing uploaded files..."
+          
+          # Check single file upload
+          if [ -d "${{ steps.interactive.outputs.file-input }}" ]; then
+            echo "Single file upload directory:"
+            ls -la "${{ steps.interactive.outputs.file-input }}"
+          fi
+          
+          # Check multiple files upload
+          if [ -d "${{ steps.interactive.outputs.multifile-input }}" ]; then
+            echo "Multiple files upload directory:"
+            ls -la "${{ steps.interactive.outputs.multifile-input }}"
+          fi
