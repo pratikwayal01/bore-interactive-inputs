@@ -6,7 +6,9 @@ import subprocess
 import time
 import re
 import signal
+import threading
 from typing import Optional
+from queue import Queue, Empty
 
 
 class BoreTunnel:
@@ -19,6 +21,17 @@ class BoreTunnel:
         self.secret = secret
         self.process: Optional[subprocess.Popen] = None
         self.public_port: Optional[int] = None
+    
+    def _read_stream(self, stream, queue, name):
+        """Read from stream in a separate thread"""
+        try:
+            for line in iter(stream.readline, ''):
+                if line:
+                    queue.put((name, line.strip()))
+        except:
+            pass
+        finally:
+            stream.close()
     
     def start(self) -> int:
         """
@@ -42,49 +55,108 @@ class BoreTunnel:
         if self.secret:
             cmd.extend(['--secret', self.secret])
         
+        print(f"[bore] Starting tunnel with command: {' '.join(cmd)}")
+        
         # Start bore process
         self.process = subprocess.Popen(
             cmd,
             stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
+            stderr=subprocess.PIPE,
             text=True,
             bufsize=1
         )
         
+        # Create queue for reading output
+        output_queue = Queue()
+        
+        # Start threads to read stdout and stderr
+        stdout_thread = threading.Thread(
+            target=self._read_stream,
+            args=(self.process.stdout, output_queue, 'stdout'),
+            daemon=True
+        )
+        stderr_thread = threading.Thread(
+            target=self._read_stream,
+            args=(self.process.stderr, output_queue, 'stderr'),
+            daemon=True
+        )
+        
+        stdout_thread.start()
+        stderr_thread.start()
+        
         # Wait for tunnel to establish and capture port number
         timeout = 30
         start_time = time.time()
+        all_output = []
         
         while time.time() - start_time < timeout:
+            # Check if process has exited
             if self.process.poll() is not None:
-                # Process exited
-                output = self.process.stdout.read()
-                raise RuntimeError(f"Bore process exited unexpectedly: {output}")
+                # Process exited - collect remaining output
+                while not output_queue.empty():
+                    try:
+                        stream_name, line = output_queue.get_nowait()
+                        all_output.append(f"[{stream_name}] {line}")
+                    except Empty:
+                        break
+                
+                all_output_str = '\n'.join(all_output)
+                raise RuntimeError(
+                    f"Bore process exited unexpectedly with code {self.process.returncode}:\n{all_output_str}"
+                )
             
-            line = self.process.stdout.readline()
-            if not line:
-                time.sleep(0.1)
+            # Try to get output from queue
+            try:
+                stream_name, line = output_queue.get(timeout=0.1)
+                all_output.append(f"[{stream_name}] {line}")
+                print(f"[bore:{stream_name}] {line}")
+                
+                # Look for port assignment in various formats
+                
+                # Format 1: "listening at bore.pub:12345"
+                match = re.search(r'listening at ([^:]+):(\d+)', line, re.IGNORECASE)
+                if match:
+                    self.public_port = int(match.group(2))
+                    print(f"[bore] ✓ Tunnel established at {match.group(1)}:{self.public_port}")
+                    return self.public_port
+                
+                # Format 2: "forwarding to bore.pub:12345" or "forwarding at..."
+                match = re.search(r'forwarding (?:to|at) ([^:]+):(\d+)', line, re.IGNORECASE)
+                if match:
+                    self.public_port = int(match.group(2))
+                    print(f"[bore] ✓ Tunnel established at {match.group(1)}:{self.public_port}")
+                    return self.public_port
+                
+                # Format 3: "bore.pub:12345" or similar (host:port pattern)
+                match = re.search(r'([a-zA-Z0-9.-]+):(\d{4,5})', line)
+                if match and match.group(1) == self.server:
+                    self.public_port = int(match.group(2))
+                    print(f"[bore] ✓ Tunnel established at {match.group(1)}:{self.public_port}")
+                    return self.public_port
+                
+                # Format 4: Just port number mentioned
+                match = re.search(r'(?:port|on)\s+(\d{4,5})', line, re.IGNORECASE)
+                if match:
+                    self.public_port = int(match.group(1))
+                    print(f"[bore] ✓ Tunnel established on port {self.public_port}")
+                    return self.public_port
+                
+                # Format 5: Check for error messages
+                if 'error' in line.lower() or 'failed' in line.lower():
+                    print(f"[bore] ⚠ Error detected: {line}")
+                
+            except Empty:
+                # No output yet, continue waiting
                 continue
-            
-            print(f"[bore] {line.strip()}")
-            
-            # Look for port assignment in output
-            # Example output: "listening at bore.pub:12345"
-            match = re.search(r'listening at [^:]+:(\d+)', line)
-            if match:
-                self.public_port = int(match.group(1))
-                print(f"[bore] Tunnel established on port {self.public_port}")
-                return self.public_port
-            
-            # Alternative format: "forwarding to bore.pub:12345"
-            match = re.search(r'(?:forwarding to|exposed at) [^:]+:(\d+)', line)
-            if match:
-                self.public_port = int(match.group(1))
-                print(f"[bore] Tunnel established on port {self.public_port}")
-                return self.public_port
         
+        # Timeout reached
         self.stop()
-        raise TimeoutError("Failed to establish bore tunnel within timeout period")
+        all_output_str = '\n'.join(all_output)
+        raise TimeoutError(
+            f"Failed to establish bore tunnel within {timeout} seconds.\n"
+            f"Command: {' '.join(cmd)}\n"
+            f"Output:\n{all_output_str if all_output_str else '(no output captured)'}"
+        )
     
     def stop(self):
         """Stop the bore tunnel"""
