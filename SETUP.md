@@ -37,7 +37,7 @@ jobs:
     steps:
       - name: Get Deployment Details
         id: inputs
-        uses: yourusername/bore-interactive-inputs@v1
+        uses: pratikwayal01/bore-interactive-inputs@v1
         with:
           bore-server: 'bore.pub'
           title: 'Deployment Configuration'
@@ -289,7 +289,7 @@ jobs:
     steps:
       - name: Get Inputs
         id: interactive
-        uses: yourusername/bore-interactive-inputs@v1
+        uses: pratikwayal01/bore-interactive-inputs@v1
         with:
           interactive: |
             fields:
@@ -329,7 +329,7 @@ You can generate field choices dynamically:
     echo "versions=$VERSIONS" >> $GITHUB_OUTPUT
 
 - name: Interactive Input
-  uses: yourusername/bore-interactive-inputs@v1
+  uses: pratikwayal01/bore-interactive-inputs@v1
   with:
     interactive: |
       fields:
@@ -351,7 +351,7 @@ jobs:
       proceed: ${{ steps.inputs.outputs.proceed }}
     steps:
       - id: inputs
-        uses: yourusername/bore-interactive-inputs@v1
+        uses: pratikwayal01/bore-interactive-inputs@v1
         with:
           title: "Step 1: Confirm Deployment"
           interactive: |
@@ -366,7 +366,7 @@ jobs:
     if: needs.first-inputs.outputs.proceed == 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: yourusername/bore-interactive-inputs@v1
+      - uses: pratikwayal01/bore-interactive-inputs@v1
         with:
           title: "Step 2: Configuration Details"
           interactive: |
