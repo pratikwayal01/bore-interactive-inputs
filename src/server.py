@@ -628,7 +628,8 @@ class InteractiveInputsServer:
     
     def run(self, port: int = 5000, debug: bool = False):
         """Run the Flask server"""
-        self.app.run(host='0.0.0.0', port=port, debug=debug)
+        # Disable Flask's reloader and set threaded mode
+        self.app.run(host='0.0.0.0', port=port, debug=debug, use_reloader=False, threaded=True)
     
     def is_completed(self) -> bool:
         """Check if form has been completed"""
