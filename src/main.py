@@ -13,6 +13,9 @@ import threading
 from pathlib import Path
 from typing import Dict, Any, Optional
 
+# Ensure output is flushed immediately
+sys.stdout.reconfigure(line_buffering=True)
+
 # Add src directory to path
 sys.path.insert(0, str(Path(__file__).parent))
 
@@ -121,6 +124,7 @@ class InteractiveInputsAction:
             print(f"\n{'='*60}")
             print(f"Starting Flask server on port {local_port}...")
             print(f"{'='*60}\n")
+            sys.stdout.flush()
             
             server_thread = threading.Thread(
                 target=self.server.run,
@@ -129,13 +133,35 @@ class InteractiveInputsAction:
             )
             server_thread.start()
             
-            # Give server a moment to start
-            time.sleep(3)
+            # Wait for server to start and verify it's running
+            print("[server] Waiting for Flask to be ready...")
+            sys.stdout.flush()
+            max_wait = 10
+            for i in range(max_wait):
+                time.sleep(1)
+                # Check if the thread is alive
+                if server_thread.is_alive():
+                    # Try to connect to the server
+                    try:
+                        import urllib.request
+                        urllib.request.urlopen(f'http://127.0.0.1:{local_port}/', timeout=1)
+                        print(f"[server] ✓ Flask server is ready and responding")
+                        sys.stdout.flush()
+                        break
+                    except:
+                        if i < max_wait - 1:
+                            print(f"[server] Waiting... ({i+1}/{max_wait})")
+                            sys.stdout.flush()
+                        continue
+            else:
+                # Extra sleep to be safe
+                time.sleep(2)
             
             print(f"\n{'='*60}")
             print(f"Flask server started successfully")
             print(f"Now establishing bore tunnel to {self.config.bore_server}...")
             print(f"{'='*60}\n")
+            sys.stdout.flush()
             
             # Start bore tunnel
             self.tunnel_url = self.start_tunnel(local_port)
