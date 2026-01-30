@@ -105,7 +105,8 @@ runs:
     - name: Install Python dependencies
       shell: bash
       run: |
-        pip install --break-system-packages flask pyyaml requests
+        pip install --break-system-packages flask pyyaml requests > /dev/null 2>&1
+        echo "✓ Python dependencies installed"
     
     - name: Install bore client
       shell: bash
@@ -129,14 +130,14 @@ runs:
         
         DOWNLOAD_URL="https://github.com/ekzhang/bore/releases/download/v${BORE_VERSION}/bore-v${BORE_VERSION}-${ARCH}-${OS}.tar.gz"
         
-        echo "Downloading bore from: $DOWNLOAD_URL"
-        curl -L "$DOWNLOAD_URL" -o bore.tar.gz
+        echo "Downloading bore ${BORE_VERSION}..."
+        curl -sL "$DOWNLOAD_URL" -o bore.tar.gz
         tar -xzf bore.tar.gz
         chmod +x bore
         sudo mv bore /usr/local/bin/
         rm bore.tar.gz
         
-        bore --version
+        echo "✓ Bore $(bore --version) installed"
     
     - name: Run Interactive Inputs Server
       shell: bash

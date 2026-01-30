@@ -16,7 +16,7 @@ Thank you for your interest in contributing! This document provides guidelines f
 1. Fork the repository
 2. Clone your fork:
    ```bash
-   git clone https://github.com/pratikwaysl01/bore-interactive-inputs.git
+   git clone https://github.com/pratikwayal01/bore-interactive-inputs.git
    cd bore-interactive-inputs
    ```
 

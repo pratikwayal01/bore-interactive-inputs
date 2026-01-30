@@ -251,36 +251,48 @@ class InteractiveInputsAction:
             self.cleanup()
     
     def set_outputs(self, results: Dict[str, Any]):
-        """Set GitHub Action outputs"""
+        """Set GitHub Action outputs using echo commands"""
         github_output = os.getenv('GITHUB_OUTPUT')
         if not github_output:
             print("Warning: GITHUB_OUTPUT not set")
             return
         
-        print(f"\n[outputs] Writing to: {github_output}")
+        print(f"\n[outputs] Setting GitHub Action outputs...")
         sys.stdout.flush()
         
-        with open(github_output, 'a') as f:
-            for key, value in results.items():
-                # Handle different value types
-                if isinstance(value, (list, dict)):
-                    value_str = json.dumps(value)
-                elif isinstance(value, bool):
-                    value_str = str(value).lower()
-                elif value is None or value == '':
-                    value_str = ''
-                else:
-                    value_str = str(value)
-                
-                # Write output in multiline format if needed
-                if '\n' in value_str:
+        for key, value in results.items():
+            # Handle different value types
+            if isinstance(value, list):
+                # For lists (like multiselect), convert to JSON
+                value_str = json.dumps(value)
+            elif isinstance(value, dict):
+                value_str = json.dumps(value)
+            elif isinstance(value, bool):
+                value_str = str(value).lower()
+            elif value is None:
+                value_str = ''
+            else:
+                value_str = str(value)
+            
+            # For multiline values, use heredoc format
+            if '\n' in value_str:
+                # Use heredoc for multiline
+                with open(github_output, 'a') as f:
                     delimiter = 'EOF'
                     f.write(f"{key}<<{delimiter}\n{value_str}\n{delimiter}\n")
-                else:
-                    f.write(f"{key}={value_str}\n")
+            else:
+                # Use simple format for single line
+                # Escape special characters for shell
+                value_str_escaped = value_str.replace('\\', '\\\\').replace('"', '\\"').replace('$', '\\$')
                 
-                print(f"[outputs] Set output: {key} = {value_str[:100]}{'...' if len(value_str) > 100 else ''}")
-                sys.stdout.flush()
+                # Write directly to GITHUB_OUTPUT file
+                with open(github_output, 'a') as f:
+                    f.write(f'{key}={value_str}\n')
+            
+            # Show what was set (truncate long values)
+            display_value = value_str[:80] + '...' if len(value_str) > 80 else value_str
+            print(f"[outputs] ✓ {key} = {display_value}")
+            sys.stdout.flush()
     
     def cleanup(self):
         """Cleanup resources"""

@@ -645,6 +645,11 @@ class InteractiveInputsServer:
     
     def run(self, port: int = 5000, debug: bool = False):
         """Run the Flask server"""
+        import logging
+        # Suppress Flask's development server warning
+        log = logging.getLogger('werkzeug')
+        log.setLevel(logging.ERROR)
+        
         # Disable Flask's reloader and set threaded mode
         self.app.run(host='0.0.0.0', port=port, debug=debug, use_reloader=False, threaded=True)
     
