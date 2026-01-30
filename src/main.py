@@ -68,7 +68,23 @@ class InteractiveInputsAction:
     
     def start_tunnel(self, local_port: int) -> str:
         """Start bore tunnel and return public URL"""
-        print(f"Starting bore tunnel for local port {local_port}...")
+        print(f"\n{'='*60}")
+        print(f"Starting bore tunnel configuration:")
+        print(f"  Local port: {local_port}")
+        print(f"  Bore server: {self.config.bore_server}")
+        print(f"  Remote port: {self.config.bore_port} (0 = random)")
+        print(f"  Secret: {'***' if self.config.bore_secret else '(none)'}")
+        print(f"{'='*60}\n")
+        
+        # Verify bore is installed
+        try:
+            import subprocess
+            result = subprocess.run(['bore', '--version'], capture_output=True, text=True, timeout=5)
+            print(f"[bore] Version check: {result.stdout.strip()}")
+        except FileNotFoundError:
+            raise RuntimeError("bore command not found! Make sure bore is installed.")
+        except Exception as e:
+            print(f"[bore] Warning: Could not check bore version: {e}")
         
         self.tunnel = BoreTunnel(
             local_port=local_port,
@@ -77,10 +93,14 @@ class InteractiveInputsAction:
             secret=self.config.bore_secret
         )
         
+        print(f"[bore] Starting tunnel...")
         public_port = self.tunnel.start()
         tunnel_url = f"http://{self.config.bore_server}:{public_port}"
         
-        print(f"✓ Tunnel established at: {tunnel_url}")
+        print(f"\n{'='*60}")
+        print(f"✓ TUNNEL ESTABLISHED!")
+        print(f"  Public URL: {tunnel_url}")
+        print(f"{'='*60}\n")
         return tunnel_url
     
     def run(self):
@@ -98,6 +118,10 @@ class InteractiveInputsAction:
             
             # Start the Flask server in background
             local_port = 5000
+            print(f"\n{'='*60}")
+            print(f"Starting Flask server on port {local_port}...")
+            print(f"{'='*60}\n")
+            
             server_thread = threading.Thread(
                 target=self.server.run,
                 kwargs={'port': local_port, 'debug': False},
@@ -106,7 +130,12 @@ class InteractiveInputsAction:
             server_thread.start()
             
             # Give server a moment to start
-            time.sleep(2)
+            time.sleep(3)
+            
+            print(f"\n{'='*60}")
+            print(f"Flask server started successfully")
+            print(f"Now establishing bore tunnel to {self.config.bore_server}...")
+            print(f"{'='*60}\n")
             
             # Start bore tunnel
             self.tunnel_url = self.start_tunnel(local_port)
@@ -121,8 +150,13 @@ class InteractiveInputsAction:
             
             print(f"\n{'='*60}")
             print(f"Interactive Input Portal is ready!")
-            print(f"URL: {self.tunnel_url}")
-            print(f"Timeout: {self.config.timeout} seconds")
+            print(f"{'='*60}")
+            print(f"\n🌐 PUBLIC URL: {self.tunnel_url}")
+            print(f"\n📋 Instructions:")
+            print(f"   1. Open the URL above in your browser")
+            print(f"   2. Fill out the form")
+            print(f"   3. Submit to continue the workflow")
+            print(f"\n⏱️  Timeout: {self.config.timeout} seconds")
             print(f"{'='*60}\n")
             
             # Wait for completion or timeout

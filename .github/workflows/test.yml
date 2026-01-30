@@ -15,7 +15,7 @@ jobs:
       
       - name: Interactive Inputs Test
         id: interactive
-        uses: ./  # Replace with pratikwayal01/bore-interactive-inputs@v1 when published
+        uses: ./ 
         with:
           bore-server: 'bore.pub'
           timeout: 300
