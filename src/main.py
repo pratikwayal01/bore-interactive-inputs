@@ -196,6 +196,14 @@ class InteractiveInputsAction:
                 # Success - get results
                 results = self.server.get_results()
                 
+                print(f"\n{'='*60}")
+                print("Received results from form:")
+                print(f"{'='*60}")
+                for key, value in results.items():
+                    print(f"  {key}: {value}")
+                print(f"{'='*60}\n")
+                sys.stdout.flush()
+                
                 # Set GitHub Action outputs
                 self.set_outputs(results)
                 
@@ -249,6 +257,9 @@ class InteractiveInputsAction:
             print("Warning: GITHUB_OUTPUT not set")
             return
         
+        print(f"\n[outputs] Writing to: {github_output}")
+        sys.stdout.flush()
+        
         with open(github_output, 'a') as f:
             for key, value in results.items():
                 # Handle different value types
@@ -256,6 +267,8 @@ class InteractiveInputsAction:
                     value_str = json.dumps(value)
                 elif isinstance(value, bool):
                     value_str = str(value).lower()
+                elif value is None or value == '':
+                    value_str = ''
                 else:
                     value_str = str(value)
                 
@@ -266,7 +279,8 @@ class InteractiveInputsAction:
                 else:
                     f.write(f"{key}={value_str}\n")
                 
-                print(f"Set output: {key} = {value_str[:100]}{'...' if len(value_str) > 100 else ''}")
+                print(f"[outputs] Set output: {key} = {value_str[:100]}{'...' if len(value_str) > 100 else ''}")
+                sys.stdout.flush()
     
     def cleanup(self):
         """Cleanup resources"""

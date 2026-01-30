@@ -25,6 +25,11 @@ class InteractiveInputsServer:
         self.file_upload_dir = Path("/tmp/bore-interactive-inputs-files")
         self.file_upload_dir.mkdir(parents=True, exist_ok=True)
         
+        # Store GitHub context for redirects
+        self.github_server_url = os.getenv('GITHUB_SERVER_URL', 'https://github.com')
+        self.github_repository = os.getenv('GITHUB_REPOSITORY', '')
+        self.github_run_id = os.getenv('GITHUB_RUN_ID', '')
+        
         # Setup routes
         self._setup_routes()
     
@@ -57,9 +62,13 @@ class InteractiveInputsServer:
                 self.results = processed_data
                 self.completed.set()
                 
+                # Build workflow URL for redirect
+                workflow_url = f"{self.github_server_url}/{self.github_repository}/actions/runs/{self.github_run_id}"
+                
                 return jsonify({
                     'success': True,
-                    'message': 'Inputs submitted successfully'
+                    'message': 'Inputs submitted successfully',
+                    'redirect_url': workflow_url
                 })
             except Exception as e:
                 return jsonify({
@@ -369,7 +378,8 @@ class InteractiveInputsServer:
         
         <div class="success-message" id="success-message">
             <h2>✓ Submitted Successfully</h2>
-            <p>Your inputs have been received. You can close this window.</p>
+            <p>Your inputs have been received.</p>
+            <p style="margin-top: 15px;">Redirecting you back to the workflow...</p>
         </div>
         
         <div class="loading" id="loading">
@@ -607,6 +617,13 @@ class InteractiveInputsServer:
                     document.getElementById('form-container').style.display = 'none';
                     document.getElementById('loading').style.display = 'none';
                     document.getElementById('success-message').style.display = 'block';
+                    
+                    // Redirect to workflow after 3 seconds
+                    if (result.redirect_url) {
+                        setTimeout(() => {
+                            window.location.href = result.redirect_url;
+                        }, 3000);
+                    }
                 } else {
                     alert('Error: ' + result.error);
                     document.getElementById('loading').style.display = 'none';
