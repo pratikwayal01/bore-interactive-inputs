@@ -95,7 +95,7 @@ With **bore-interactive-inputs**, you can run your own tunnel server:
 bore server --bind-addr 0.0.0.0 --secret $BORE_SECRET
 
 # In your workflow
-- uses: pratikwayal01/bore-interactive-inputs@v1
+- uses: pratikwayal01/bore-interactive-inputs@v1.0.2
   with:
     bore-server: 'your-server.com'
     bore-secret: ${{ secrets.BORE_SECRET }}
@@ -138,7 +138,7 @@ If you're currently using interactive-inputs, migration is straightforward:
             choices: [dev, prod]
 
 # After (bore-interactive-inputs)
-- uses: pratikwayal01/bore-interactive-inputs@v1
+- uses: pratikwayal01/bore-interactive-inputs@v1.0.2
   with:
     bore-server: 'bore.pub'  # or your server
     interactive: |

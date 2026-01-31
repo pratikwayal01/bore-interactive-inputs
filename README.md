@@ -27,7 +27,7 @@ jobs:
     steps:
       - name: Get User Input
         id: inputs
-        uses: pratikwayal01/bore-interactive-inputs@v1
+        uses: pratikwayal01/bore-interactive-inputs@v1.0.2
         with:
           bore-server: 'bore.pub'  # or your self-hosted server
           title: 'Deployment Configuration'
@@ -214,7 +214,7 @@ jobs:
     steps:
       - name: Interactive Inputs
         id: inputs
-        uses: pratikwayal01/bore-interactive-inputs@v1
+        uses: pratikwayal01/bore-interactive-inputs@v1.0.2
         with:
           bore-server: 'bore.pub'
           timeout: 600

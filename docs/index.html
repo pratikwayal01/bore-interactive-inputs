@@ -1,0 +1,1271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Bore Interactive Inputs — Docs</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Syne:wght@400;500;600;700;800&family=Inter:wght@350;400;450;500&display=swap" rel="stylesheet" />
+<style>
+/* ─────────────────────────── tokens ─────────────────────── */
+:root {
+  --bg: #0a0c0f;
+  --bg-elevated: #111417;
+  --bg-card: #161a1f;
+  --border: #232a33;
+  --border-light: #2e3740;
+  --text: #d6dde6;
+  --text-muted: #6e7d8f;
+  --text-bright: #f0f4f8;
+  --accent: #4ade80;        /* green */
+  --accent-dim: rgba(74,222,128,.15);
+  --accent2: #38bdf8;       /* sky blue */
+  --accent2-dim: rgba(56,189,248,.12);
+  --accent3: #a78bfa;       /* violet – used sparingly */
+  --code-bg: #0d1016;
+  --code-border: #1e262e;
+  --tag-bg: rgba(74,222,128,.08);
+  --tag-border: rgba(74,222,128,.25);
+  --warn-bg: rgba(251,191,36,.08);
+  --warn-border: rgba(251,191,36,.25);
+  --warn-text: #fbbf24;
+  --tip-bg: rgba(56,189,248,.08);
+  --tip-border: rgba(56,189,248,.22);
+  --tip-text: #38bdf8;
+  --sidebar-w: 240px;
+  --header-h: 56px;
+}
+
+/* ─────────────────────────── reset ──────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'Inter', system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 14.5px;
+  line-height: 1.7;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+a { color: var(--accent2); text-decoration: none; }
+a:hover { text-decoration: underline; color: #7dd3fc; }
+img { max-width: 100%; }
+
+/* ─────────────────────────── header ─────────────────────── */
+.header {
+  position: fixed; top: 0; left: 0; right: 0;
+  height: var(--header-h);
+  background: rgba(10,12,15,.85);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  z-index: 100;
+  display: flex; align-items: center;
+  padding: 0 24px;
+  gap: 12px;
+}
+.header-logo {
+  display: flex; align-items: center; gap: 10px;
+  text-decoration: none;
+}
+.header-logo .icon {
+  width: 30px; height: 30px;
+  background: var(--accent);
+  border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+}
+.header-logo .icon svg { width: 16px; height: 16px; }
+.header-logo .name {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--text-bright);
+  letter-spacing: -0.3px;
+}
+.header-logo .name span { color: var(--accent); }
+.header-badge {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: .6px;
+  text-transform: uppercase;
+  color: var(--accent);
+  background: var(--accent-dim);
+  border: 1px solid var(--tag-border);
+  padding: 2px 7px;
+  border-radius: 20px;
+  margin-left: 4px;
+}
+.header-nav { margin-left: auto; display: flex; gap: 6px; }
+.header-nav a {
+  font-size: 12.5px; color: var(--text-muted);
+  padding: 5px 10px; border-radius: 5px;
+  transition: background .15s, color .15s;
+}
+.header-nav a:hover, .header-nav a.active {
+  background: var(--bg-elevated); color: var(--text-bright);
+  text-decoration: none;
+}
+
+/* ─────────────────────────── sidebar ────────────────────── */
+.sidebar {
+  position: fixed;
+  top: var(--header-h); left: 0;
+  width: var(--sidebar-w);
+  height: calc(100vh - var(--header-h));
+  background: var(--bg);
+  border-right: 1px solid var(--border);
+  overflow-y: auto;
+  padding: 20px 14px;
+  z-index: 50;
+}
+.sidebar-section-label {
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: .8px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  padding: 12px 10px 6px;
+  margin-top: 8px;
+}
+.sidebar-section-label:first-child { margin-top: 0; }
+.sidebar a {
+  display: flex; align-items: center; gap: 9px;
+  padding: 7px 10px;
+  border-radius: 6px;
+  font-size: 13px;
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: background .15s, color .15s;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sidebar a .icon { width: 15px; height: 15px; opacity: .55; flex-shrink: 0; }
+.sidebar a:hover { background: var(--bg-elevated); color: var(--text); text-decoration: none; }
+.sidebar a.active {
+  background: var(--accent-dim);
+  color: var(--accent);
+}
+.sidebar a.active .icon { opacity: 1; }
+.sidebar a.sub { padding-left: 30px; font-size: 12.5px; }
+
+/* ─────────────────────────── main ───────────────────────── */
+.main {
+  margin-left: var(--sidebar-w);
+  padding-top: var(--header-h);
+  min-height: 100vh;
+}
+.content {
+  max-width: 780px;
+  margin: 0 auto;
+  padding: 48px 32px 120px;
+}
+
+/* page sections – each <section> is a "page" */
+.page { display: none; }
+.page.active { display: block; }
+
+/* ─── headings ─── */
+.page h1 {
+  font-family: 'Syne', sans-serif;
+  font-size: 34px;
+  font-weight: 800;
+  color: var(--text-bright);
+  letter-spacing: -1px;
+  line-height: 1.2;
+  margin-bottom: 8px;
+}
+.page h1 .accent { color: var(--accent); }
+.page-subtitle {
+  font-size: 15px;
+  color: var(--text-muted);
+  margin-bottom: 40px;
+  max-width: 540px;
+  line-height: 1.6;
+}
+.page h2 {
+  font-family: 'Syne', sans-serif;
+  font-size: 21px;
+  font-weight: 700;
+  color: var(--text-bright);
+  letter-spacing: -0.4px;
+  margin: 44px 0 14px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+.page h2:first-of-type { margin-top: 0; border-top: none; padding-top: 0; }
+.page h3 {
+  font-family: 'Syne', sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-bright);
+  margin: 28px 0 10px;
+}
+.page h4 {
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--accent2);
+  margin: 20px 0 8px;
+  letter-spacing: .2px;
+}
+.page p { margin-bottom: 14px; }
+.page ul, .page ol { margin-bottom: 16px; padding-left: 20px; }
+.page li { margin-bottom: 5px; }
+.page strong { color: var(--text-bright); font-weight: 500; }
+
+/* ─── code blocks ─── */
+.code-block {
+  background: var(--code-bg);
+  border: 1px solid var(--code-border);
+  border-radius: 8px;
+  margin: 14px 0 20px;
+  overflow: hidden;
+}
+.code-header {
+  display: flex; align-items: center;
+  padding: 8px 14px;
+  background: var(--bg-elevated);
+  border-bottom: 1px solid var(--code-border);
+  gap: 8px;
+  font-size: 11.5px;
+  color: var(--text-muted);
+}
+.code-header .dots { display: flex; gap: 5px; }
+.code-header .dot {
+  width: 11px; height: 11px; border-radius: 50%;
+}
+.code-header .dot:nth-child(1) { background: #ff5f57; }
+.code-header .dot:nth-child(2) { background: #ffbd2e; }
+.code-header .dot:nth-child(3) { background: #28c840; }
+.code-header .lang { margin-left: auto; opacity: .5; }
+pre {
+  padding: 16px;
+  overflow-x: auto;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: #c9d1d9;
+}
+/* syntax colours */
+.kw { color: #f97583; }   /* keywords */
+.str { color: #a5d6ff; }  /* strings */
+.cmt { color: #8b949e; font-style: italic; } /* comments */
+.var { color: #c9d1d9; }
+.fn  { color: #d2a8ff; } /* functions */
+.num { color: #79c0ff; } /* numbers */
+.op  { color: #f97583; }
+.tag { color: #7ee787; } /* yaml keys / tags */
+.val { color: #a5d6ff; } /* values */
+
+/* inline code */
+code {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  padding: 2px 6px;
+  border-radius: 4px;
+  color: var(--accent2);
+}
+
+/* ─── callouts ─── */
+.callout {
+  border-radius: 8px;
+  padding: 14px 18px;
+  margin: 18px 0;
+  display: flex; gap: 12px;
+  font-size: 13.5px;
+}
+.callout .icon { flex-shrink: 0; font-size: 18px; line-height: 1.2; }
+.callout.tip { background: var(--tip-bg); border: 1px solid var(--tip-border); }
+.callout.tip .label { color: var(--tip-text); font-weight: 600; font-size: 11px; letter-spacing: .5px; text-transform: uppercase; }
+.callout.warn { background: var(--warn-bg); border: 1px solid var(--warn-border); }
+.callout.warn .label { color: var(--warn-text); font-weight: 600; font-size: 11px; letter-spacing: .5px; text-transform: uppercase; }
+
+/* ─── tables ─── */
+.table-wrap { overflow-x: auto; margin: 14px 0 24px; }
+table {
+  width: 100%; border-collapse: collapse;
+  font-size: 13px;
+}
+th {
+  text-align: left;
+  padding: 9px 12px;
+  background: var(--bg-elevated);
+  color: var(--text-muted);
+  font-weight: 500;
+  font-size: 11.5px;
+  letter-spacing: .4px;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+td {
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: rgba(255,255,255,.02); }
+td code { font-size: 11.5px; }
+.badge {
+  display: inline-block;
+  font-size: 10.5px;
+  font-weight: 500;
+  padding: 2px 7px;
+  border-radius: 12px;
+}
+.badge.yes { background: var(--accent-dim); color: var(--accent); border: 1px solid var(--tag-border); }
+.badge.no  { background: rgba(248,113,113,.1); color: #f87171; border: 1px solid rgba(248,113,113,.22); }
+.badge.req { background: var(--warn-bg); color: var(--warn-text); border: 1px solid var(--warn-border); }
+
+/* ─── step list ─── */
+.steps { list-style: none; padding: 0; counter-reset: steps; }
+.steps li {
+  counter-increment: steps;
+  position: relative;
+  padding-left: 38px;
+  margin-bottom: 18px;
+}
+.steps li::before {
+  content: counter(steps);
+  position: absolute; left: 0; top: 0;
+  width: 26px; height: 26px;
+  background: var(--accent-dim);
+  border: 1px solid var(--tag-border);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 12px;
+  color: var(--accent);
+}
+.steps li strong { color: var(--text-bright); }
+
+/* ─── comparison card row ─── */
+.compare-row { display: flex; gap: 16px; margin: 20px 0; }
+.compare-card {
+  flex: 1;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 20px;
+}
+.compare-card h4 { margin-top: 0; font-size: 14px; }
+.compare-card ul { padding-left: 18px; }
+.compare-card li { font-size: 13px; margin-bottom: 4px; }
+.compare-card.highlight { border-color: var(--accent); background: rgba(74,222,128,.04); }
+.compare-card.highlight h4 { color: var(--accent); }
+
+/* ─── flow diagram ─── */
+.flow { display: flex; flex-direction: column; gap: 2px; margin: 20px 0; }
+.flow-step {
+  display: flex; align-items: center; gap: 14px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  padding: 11px 16px;
+  transition: border-color .2s;
+}
+.flow-step:hover { border-color: var(--border-light); }
+.flow-step .num {
+  width: 28px; height: 28px; flex-shrink: 0;
+  background: var(--accent-dim);
+  border: 1px solid var(--tag-border);
+  border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px; font-weight: 500;
+  color: var(--accent);
+}
+.flow-step .text { font-size: 13.5px; color: var(--text); }
+.flow-step .text strong { color: var(--text-bright); }
+.flow-arrow {
+  align-self: flex-start;
+  margin-left: 28px;
+  color: var(--border-light);
+  font-size: 14px;
+  line-height: 8px;
+  padding: 2px 0;
+}
+
+/* ─── troubleshoot item ─── */
+.trouble { margin: 22px 0; }
+.trouble-q {
+  font-size: 14px; font-weight: 500;
+  color: var(--text-bright);
+  margin-bottom: 6px;
+  display: flex; align-items: center; gap: 8px;
+}
+.trouble-q::before {
+  content: '?';
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 22px; height: 22px;
+  background: var(--warn-bg); border: 1px solid var(--warn-border);
+  border-radius: 50%; font-size: 12px; font-weight: 700;
+  color: var(--warn-text); flex-shrink: 0;
+}
+.trouble-a { padding-left: 30px; font-size: 13.5px; }
+.trouble-a ul { margin: 6px 0 0; }
+
+/* ─── footer ─── */
+.footer {
+  margin-top: 60px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border);
+  font-size: 12px;
+  color: var(--text-muted);
+  display: flex; justify-content: space-between; align-items: center;
+}
+.footer a { color: var(--text-muted); }
+.footer a:hover { color: var(--accent2); text-decoration: none; }
+
+/* ─────────────────────────── responsive ─────────────────── */
+@media (max-width: 860px) {
+  .sidebar { display: none; }
+  .main { margin-left: 0; }
+  .content { padding: 40px 20px 100px; }
+  .compare-row { flex-direction: column; }
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════ HEADER ═══════════════════════ -->
+<header class="header">
+  <a class="header-logo" href="#" onclick="nav('home')">
+    <div class="icon">
+      <svg viewBox="0 0 16 16" fill="none" stroke="#0a0c0f" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M2 4h12M2 8h8M2 12h10"/>
+      </svg>
+    </div>
+    <span class="name">bore<span>-interactive-inputs</span></span>
+  </a>
+  <span class="header-badge">v1.0</span>
+  <nav class="header-nav">
+    <a href="#" onclick="nav('home')" id="nav-home" class="active">Docs</a>
+    <a href="https://github.com" target="_blank" style="opacity:.6">GitHub ↗</a>
+  </nav>
+</header>
+
+<!-- ═══════════════════════════ SIDEBAR ═══════════════════════ -->
+<aside class="sidebar">
+  <div class="sidebar-section-label">Getting Started</div>
+  <a href="#" onclick="nav('home')" id="sb-home" class="active">
+    <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 6l6-4 6 4v7a1 1 0 01-1 1H3a1 1 0 01-1-1V6z"/><path d="M6 14V8h4v6"/></svg>
+    Overview
+  </a>
+  <a href="#" onclick="nav('quickstart')" id="sb-quickstart">
+    <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><polygon points="4,2 14,8 4,14"/></svg>
+    Quick Start
+  </a>
+
+  <div class="sidebar-section-label">Configuration</div>
+  <a href="#" onclick="nav('inputs')" id="sb-inputs">
+    <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="1" y="3" width="14" height="10" rx="2"/><path d="M4 7h8M4 10h5"/></svg>
+    Action Inputs
+  </a>
+  <a href="#" onclick="nav('fieldtypes')" id="sb-fieldtypes">
+    <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2" y="1" width="12" height="14" rx="1"/><path d="M5 5h6M5 8h4M5 11h5"/></svg>
+    Field Types
+  </a>
+  <a href="#" onclick="nav('notifications')" id="sb-notifications">
+    <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M8 1a5 5 0 00-5 5v3l-1 2h12l-1-2V6a5 5 0 00-5-5z"/><path d="M6.5 13a1.5 1.5 0 003 0"/></svg>
+    Notifications
+  </a>
+
+  <div class="sidebar-section-label">Advanced</div>
+  <a href="#" onclick="nav('selfhost')" id="sb-selfhost">
+    <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="1" y="2" width="14" height="5" rx="1"/><rect x="1" y="9" width="14" height="5" rx="1"/><circle cx="4" cy="4.5" r=".8" fill="currentColor" stroke="none"/><circle cx="4" cy="11.5" r=".8" fill="currentColor" stroke="none"/></svg>
+    Self-Hosting Bore
+  </a>
+  <a href="#" onclick="nav('advanced')" id="sb-advanced">
+    <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 4l2 2-2 2"/><path d="M13 4l-2 2 2 2"/><path d="M9 2l-2 12"/></svg>
+    Advanced Patterns
+  </a>
+  <a href="#" onclick="nav('troubleshoot')" id="sb-troubleshoot">
+    <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="8" cy="8" r="6"/><path d="M8 5v3"/><circle cx="8" cy="11" r=".6" fill="currentColor" stroke="none"/></svg>
+    Troubleshooting
+  </a>
+  <a href="#" onclick="nav('why')" id="sb-why">
+    <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M8 1l2 4h4l-3 2.5 1 4.5L8 9.5 4 12l1-4.5L2 5h4z"/></svg>
+    Why Bore?
+  </a>
+</aside>
+
+<!-- ═══════════════════════════ MAIN ═════════════════════════ -->
+<main class="main">
+<div class="content">
+
+<!-- ─────────── HOME / OVERVIEW ─────────── -->
+<section class="page active" id="page-home">
+  <h1>Bore <span class="accent">Interactive Inputs</span></h1>
+  <p class="page-subtitle">A GitHub Action that creates runtime user-input portals inside your workflows — no ngrok signup, no third-party dependency. Powered by self-hostable <strong>bore</strong> tunnels and built in Python.</p>
+
+  <h2>How it works</h2>
+  <div class="flow">
+    <div class="flow-step"><div class="num">1</div><div class="text"><strong>Action starts</strong> — installs deps, spins up a Flask form server on localhost.</div></div>
+    <div class="flow-arrow">▼</div>
+    <div class="flow-step"><div class="num">2</div><div class="text"><strong>Bore tunnel</strong> — exposes the local server via <code>bore.pub</code> (or your own server).</div></div>
+    <div class="flow-arrow">▼</div>
+    <div class="flow-step"><div class="num">3</div><div class="text"><strong>Notify</strong> — optional Slack / Discord message with the public URL.</div></div>
+    <div class="flow-arrow">▼</div>
+    <div class="flow-step"><div class="num">4</div><div class="text"><strong>User fills form</strong> — opens URL, enters data, uploads files, hits Submit.</div></div>
+    <div class="flow-arrow">▼</div>
+    <div class="flow-step"><div class="num">5</div><div class="text"><strong>Outputs set</strong> — every field becomes a step output; workflow continues.</div></div>
+  </div>
+
+  <div class="callout tip">
+    <div class="icon">💡</div>
+    <div><span class="label">Tip</span><br/>
+    You can use <code>bore.pub</code> out of the box — zero setup. For production or regulated environments, <a href="#" onclick="nav('selfhost')">self-host your own bore server</a>.</div>
+  </div>
+
+  <h2>Key features</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Feature</th><th>Details</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Self-hostable tunnel</strong></td><td>Use <code>bore.pub</code> or run your own bore server — no external accounts required.</td></tr>
+        <tr><td><strong>8 field types</strong></td><td>text, textarea, number, boolean, select, multiselect, file, multifile.</td></tr>
+        <tr><td><strong>Notifications</strong></td><td>Slack and Discord support out of the box.</td></tr>
+        <tr><td><strong>File uploads</strong></td><td>Single and multi-file uploads with MIME-type filtering.</td></tr>
+        <tr><td><strong>Python-based</strong></td><td>Easy to read, maintain, and extend.</td></tr>
+        <tr><td><strong>Auto-redirect</strong></td><td>After submission, user is sent back to the workflow run page.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="footer">
+    <span>bore-interactive-inputs v1.0.0 · MIT License</span>
+    <span><a href="https://github.com" target="_blank">GitHub ↗</a></span>
+  </div>
+</section>
+
+<!-- ─────────── QUICK START ─────────── -->
+<section class="page" id="page-quickstart">
+  <h1>Quick <span class="accent">Start</span></h1>
+  <p class="page-subtitle">From zero to a working interactive workflow in under five minutes.</p>
+
+  <h2>Prerequisites</h2>
+  <ul>
+    <li>A GitHub repository with <strong>Actions enabled</strong>.</li>
+    <li>(Optional) Slack or Discord for notifications.</li>
+  </ul>
+
+  <h2>1. Add the action to your repo</h2>
+  <p>Create or edit <code>.github/workflows/interactive.yml</code>:</p>
+  <div class="code-block">
+    <div class="code-header"><div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div><span class="lang">yaml</span></div>
+    <pre><span class="cmt"># .github/workflows/interactive.yml</span>
+<span class="kw">name:</span> <span class="str">Interactive Deployment</span>
+
+<span class="kw">on:</span>
+  <span class="tag">workflow_dispatch:</span>
+
+<span class="kw">jobs:</span>
+  <span class="tag">get-inputs:</span>
+    <span class="tag">runs-on:</span> <span class="str">ubuntu-latest</span>
+    <span class="tag">steps:</span>
+      - <span class="tag">name:</span> <span class="str">Get Deployment Details</span>
+        <span class="tag">id:</span> <span class="str">inputs</span>
+        <span class="tag">uses:</span> <span class="str">pratikwayal01/bore-interactive-inputs@v1.0.2</span>
+        <span class="tag">with:</span>
+          <span class="tag">bore-server:</span> <span class="str">'bore.pub'</span>
+          <span class="tag">title:</span> <span class="str">'Deployment Configuration'</span>
+          <span class="tag">interactive:</span> <span class="op">|</span>
+            <span class="tag">fields:</span>
+              - <span class="tag">label:</span> <span class="str">environment</span>
+                <span class="tag">properties:</span>
+                  <span class="tag">display:</span> <span class="str">Select Environment</span>
+                  <span class="tag">type:</span> <span class="str">select</span>
+                  <span class="tag">choices:</span>
+                    - <span class="str">development</span>
+                    - <span class="str">staging</span>
+                    - <span class="str">production</span>
+                  <span class="tag">required:</span> <span class="kw">true</span>
+
+      - <span class="tag">name:</span> <span class="str">Use the inputs</span>
+        <span class="tag">run:</span> <span class="op">|</span>
+          <span class="str">echo "Environment: ${{ steps.inputs.outputs.environment }}"</span></pre>
+  </div>
+
+  <h2>2. Trigger the workflow</h2>
+  <ol class="steps">
+    <li><strong>Go to Actions</strong> — open your repo on GitHub, click the <em>Actions</em> tab.</li>
+    <li><strong>Select your workflow</strong> — choose <em>Interactive Deployment</em> from the list.</li>
+    <li><strong>Run workflow</strong> — click the <em>Run workflow</em> button (top-right).</li>
+    <li><strong>Wait for the URL</strong> — watch the logs; a public URL will appear after ~10 seconds.</li>
+    <li><strong>Fill the form</strong> — open the URL, enter your values, hit <em>Submit</em>.</li>
+    <li><strong>Watch it continue</strong> — the workflow resumes and your next step can use the outputs.</li>
+  </ol>
+
+  <div class="callout warn">
+    <div class="icon">⚡</div>
+    <div><span class="label">Timeout</span><br/>
+    Default timeout is <strong>300 seconds (5 min)</strong>. If nobody submits in time, the workflow fails. Increase with the <code>timeout</code> input if needed.</div>
+  </div>
+
+  <div class="footer">
+    <span>Next: <a href="#" onclick="nav('inputs')">Action Inputs →</a></span>
+    <span></span>
+  </div>
+</section>
+
+<!-- ─────────── ACTION INPUTS ─────────── -->
+<section class="page" id="page-inputs">
+  <h1>Action <span class="accent">Inputs</span></h1>
+  <p class="page-subtitle">Every configuration knob the action exposes, organised by category.</p>
+
+  <h2>Core</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Input</th><th>Description</th><th>Required</th><th>Default</th></tr></thead>
+      <tbody>
+        <tr><td><code>title</code></td><td>Title shown at the top of the form.</td><td></td><td><code>Interactive Inputs</code></td></tr>
+        <tr><td><code>interactive</code></td><td>YAML definition of the fields to display (see Field Types).</td><td><span class="badge req">Yes</span></td><td>—</td></tr>
+        <tr><td><code>timeout</code></td><td>Seconds to wait for a submission before failing.</td><td></td><td><code>300</code></td></tr>
+        <tr><td><code>bore-server</code></td><td>Bore server hostname.</td><td><span class="badge req">Yes</span></td><td><code>bore.pub</code></td></tr>
+        <tr><td><code>bore-port</code></td><td>Request a specific remote port. <code>0</code> = random.</td><td></td><td><code>0</code></td></tr>
+        <tr><td><code>bore-secret</code></td><td>Auth secret if your bore server requires one.</td><td></td><td>—</td></tr>
+        <tr><td><code>github-token</code></td><td>Token for GitHub API calls.</td><td><span class="badge req">Yes</span></td><td><code>${{ github.token }}</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>Outputs</h2>
+  <p>Every field label declared in your <code>interactive</code> YAML becomes an output on the step. Access them via <code>${{ steps.&lt;id&gt;.outputs.&lt;label&gt; }}</code>.</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Field type</th><th>Output format</th></tr></thead>
+      <tbody>
+        <tr><td>text / textarea</td><td>Plain string</td></tr>
+        <tr><td>number</td><td>Numeric string, e.g. <code>42</code></td></tr>
+        <tr><td>boolean</td><td><code>true</code> or <code>false</code></td></tr>
+        <tr><td>select</td><td>Selected choice string</td></tr>
+        <tr><td>multiselect</td><td>JSON array, e.g. <code>["A","B"]</code></td></tr>
+        <tr><td>file / multifile</td><td>Path to the upload directory</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout tip">
+    <div class="icon">💡</div>
+    <div><span class="label">Tip</span><br/>
+    To pass outputs to a <em>later job</em>, declare them on the job level with <code>outputs:</code> and reference <code>${{ steps.&lt;id&gt;.outputs.* }}</code>. See the <a href="#" onclick="nav('advanced')">Advanced Patterns</a> page for a full example.</div>
+  </div>
+
+  <div class="footer">
+    <span>Next: <a href="#" onclick="nav('fieldtypes')">Field Types →</a></span>
+    <span></span>
+  </div>
+</section>
+
+<!-- ─────────── FIELD TYPES ─────────── -->
+<section class="page" id="page-fieldtypes">
+  <h1>Field <span class="accent">Types</span></h1>
+  <p class="page-subtitle">Eight input types with full YAML syntax and every available property.</p>
+
+  <h3>text</h3>
+  <p>A single-line text input.</p>
+  <div class="code-block">
+    <div class="code-header"><div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div><span class="lang">yaml</span></div>
+    <pre>- <span class="tag">label:</span> <span class="str">username</span>
+  <span class="tag">properties:</span>
+    <span class="tag">display:</span>    <span class="str">Username</span>
+    <span class="tag">type:</span>       <span class="str">text</span>
+    <span class="tag">description:</span> <span class="str">Your GitHub handle</span>
+    <span class="tag">placeholder:</span> <span class="str">e.g. octocat</span>
+    <span class="tag">maxLength:</span>  <span class="num">50</span>
+    <span class="tag">required:</span>   <span class="kw">true</span></pre>
+  </div>
+
+  <h3>textarea</h3>
+  <p>Multi-line text. Useful for release notes, configs, or long descriptions.</p>
+  <div class="code-block">
+    <div class="code-header"><div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div><span class="lang">yaml</span></div>
+    <pre>- <span class="tag">label:</span> <span class="str">release-notes</span>
+  <span class="tag">properties:</span>
+    <span class="tag">display:</span>    <span class="str">Release Notes</span>
+    <span class="tag">type:</span>       <span class="str">textarea</span>
+    <span class="tag">placeholder:</span> <span class="str">Describe the changes...</span>
+    <span class="tag">maxLength:</span>  <span class="num">1000</span>
+    <span class="tag">readOnly:</span>   <span class="kw">false</span></pre>
+  </div>
+
+  <h3>number</h3>
+  <p>Numeric input with optional min/max bounds.</p>
+  <div class="code-block">
+    <div class="code-header"><div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div><span class="lang">yaml</span></div>
+    <pre>- <span class="tag">label:</span> <span class="str">replicas</span>
+  <span class="tag">properties:</span>
+    <span class="tag">display:</span>    <span class="str">Pod Replicas</span>
+    <span class="tag">type:</span>       <span class="str">number</span>
+    <span class="tag">minNumber:</span>  <span class="num">1</span>
+    <span class="tag">maxNumber:</span>  <span class="num">20</span>
+    <span class="tag">required:</span>   <span class="kw">true</span></pre>
+  </div>
+
+  <h3>boolean</h3>
+  <p>A checkbox. Output is the string <code>true</code> or <code>false</code>.</p>
+  <div class="code-block">
+    <div class="code-header"><div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div><span class="lang">yaml</span></div>
+    <pre>- <span class="tag">label:</span> <span class="str">confirmed</span>
+  <span class="tag">properties:</span>
+    <span class="tag">display:</span>      <span class="str">Confirm deployment?</span>
+    <span class="tag">type:</span>         <span class="str">boolean</span>
+    <span class="tag">defaultValue:</span> <span class="kw">false</span></pre>
+  </div>
+
+  <h3>select</h3>
+  <p>A dropdown — the user picks exactly one option.</p>
+  <div class="code-block">
+    <div class="code-header"><div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div><span class="lang">yaml</span></div>
+    <pre>- <span class="tag">label:</span> <span class="str">region</span>
+  <span class="tag">properties:</span>
+    <span class="tag">display:</span>  <span class="str">AWS Region</span>
+    <span class="tag">type:</span>     <span class="str">select</span>
+    <span class="tag">choices:</span>
+      - <span class="str">us-east-1</span>
+      - <span class="str">us-west-2</span>
+      - <span class="str">eu-west-1</span>
+    <span class="tag">required:</span> <span class="kw">true</span></pre>
+  </div>
+
+  <h3>multiselect</h3>
+  <p>Checkboxes — the user picks one or more. Output is a JSON array.</p>
+  <div class="code-block">
+    <div class="code-header"><div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div><span class="lang">yaml</span></div>
+    <pre>- <span class="tag">label:</span> <span class="str">features</span>
+  <span class="tag">properties:</span>
+    <span class="tag">display:</span>  <span class="str">Enable Features</span>
+    <span class="tag">type:</span>     <span class="str">multiselect</span>
+    <span class="tag">choices:</span>
+      - <span class="str">Feature A</span>
+      - <span class="str">Feature B</span>
+      - <span class="str">Feature C</span></pre>
+  </div>
+
+  <h3>file</h3>
+  <p>Single file upload. Filter by MIME type with <code>acceptedFileTypes</code>.</p>
+  <div class="code-block">
+    <div class="code-header"><div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div><span class="lang">yaml</span></div>
+    <pre>- <span class="tag">label:</span> <span class="str">config-file</span>
+  <span class="tag">properties:</span>
+    <span class="tag">display:</span>            <span class="str">Upload Config</span>
+    <span class="tag">type:</span>               <span class="str">file</span>
+    <span class="tag">acceptedFileTypes:</span>
+      - <span class="str">application/json</span>
+      - <span class="str">text/yaml</span>
+    <span class="tag">required:</span>           <span class="kw">true</span></pre>
+  </div>
+
+  <h3>multifile</h3>
+  <p>Multiple file upload. Same MIME filtering; output is a directory path.</p>
+  <div class="code-block">
+    <div class="code-header"><div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div><span class="lang">yaml</span></div>
+    <pre>- <span class="tag">label:</span> <span class="str">migration-scripts</span>
+  <span class="tag">properties:</span>
+    <span class="tag">display:</span>            <span class="str">Upload Migration Scripts</span>
+    <span class="tag">type:</span>               <span class="str">multifile</span>
+    <span class="tag">acceptedFileTypes:</span>
+      - <span class="str">text/sql</span>
+      - <span class="str">application/pdf</span></pre>
+  </div>
+
+  <div class="callout tip">
+    <div class="icon">💡</div>
+    <div><span class="label">Tip</span><br/>
+    Use <code>image/*</code> or <code>text/*</code> as wildcards in <code>acceptedFileTypes</code> to match any subtype.</div>
+  </div>
+
+  <div class="footer">
+    <span>Next: <a href="#" onclick="nav('notifications')">Notifications →</a></span>
+    <span></span>
+  </div>
+</section>
+
+<!-- ─────────── NOTIFICATIONS ─────────── -->
+<section class="page" id="page-notifications">
+  <h1><span class="accent">Notifications</span></h1>
+  <p class="page-subtitle">Alert your team the moment an interactive form is ready — via Slack, Discord, or both.</p>
+
+  <h2>Slack</h2>
+  <h4>1. Create a Slack app</h4>
+  <ol class="steps">
+    <li><strong>Go to</strong> <a href="https://api.slack.com/apps" target="_blank">api.slack.com/apps</a> and click <em>Create New App → From scratch</em>.</li>
+    <li><strong>Name the app</strong> and pick your workspace, then click <em>Create App</em>.</li>
+    <li><strong>Add scopes</strong> — in <em>OAuth & Permissions → Bot Token Scopes</em> add <code>chat:write</code> and <code>chat:write.customize</code>.</li>
+    <li><strong>Install</strong> — scroll up, click <em>Install to Workspace</em>, then <em>Authorize</em>.</li>
+    <li><strong>Copy token</strong> — grab the <em>Bot User OAuth Token</em> (starts with <code>xoxb-</code>).</li>
+  </ol>
+
+  <h4>2. Store the token</h4>
+  <p>In your repo: <em>Settings → Secrets and variables → Actions → New repository secret</em>. Name it <code>SLACK_TOKEN</code>, paste the value.</p>
+
+  <h4>3. Add to workflow</h4>
+  <div class="code-block">
+    <div class="code-header"><div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div><span class="lang">yaml</span></div>
+    <pre><span class="tag">with:</span>
+  <span class="tag">notifier-slack-enabled:</span>    <span class="str">"true"</span>
+  <span class="tag">notifier-slack-token:</span>      <span class="str">${{ secrets.SLACK_TOKEN }}</span>
+  <span class="tag">notifier-slack-channel:</span>    <span class="str">"#deployments"</span>
+  <span class="tag">notifier-slack-bot:</span>        <span class="str">"Deploy Bot"</span>
+  <span class="cmt"># optional: reply to a specific thread</span>
+  <span class="tag">notifier-slack-thread-ts:</span>  <span class="str">"1234567890.123456"</span></pre>
+  </div>
+
+  <h2>Discord</h2>
+  <h4>1. Create a webhook</h4>
+  <ol class="steps">
+    <li><strong>Channel settings</strong> — right-click your target channel → <em>Edit Channel</em>.</li>
+    <li><strong>Integrations</strong> — click <em>Webhooks → New Webhook</em>.</li>
+    <li><strong>Copy URL</strong> — click <em>Copy Webhook URL</em>.</li>
+  </ol>
+
+  <h4>2. Store the webhook</h4>
+  <p>Same as Slack — add a secret called <code>DISCORD_WEBHOOK</code> in your repo settings.</p>
+
+  <h4>3. Add to workflow</h4>
+  <div class="code-block">
+    <div class="code-header"><div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div><span class="lang">yaml</span></div>
+    <pre><span class="tag">with:</span>
+  <span class="tag">notifier-discord-enabled:</span>    <span class="str">"true"</span>
+  <span class="tag">notifier-discord-webhook:</span>    <span class="str">${{ secrets.DISCORD_WEBHOOK }}</span>
+  <span class="tag">notifier-discord-username:</span>   <span class="str">"Deploy Bot"</span>
+  <span class="cmt"># optional: post inside a thread</span>
+  <span class="tag">notifier-discord-thread-id:</span>  <span class="str">"1234567890123456789"</span></pre>
+  </div>
+
+  <div class="callout tip">
+    <div class="icon">💡</div>
+    <div><span class="label">Tip</span><br/>
+    You can enable <strong>both</strong> Slack and Discord at the same time — just set both blocks in your <code>with:</code> section.</div>
+  </div>
+
+  <div class="footer">
+    <span>Next: <a href="#" onclick="nav('selfhost')">Self-Hosting →</a></span>
+    <span></span>
+  </div>
+</section>
+
+<!-- ─────────── SELF-HOST ─────────── -->
+<section class="page" id="page-selfhost">
+  <h1>Self-Hosting <span class="accent">Bore</span></h1>
+  <p class="page-subtitle">Run your own tunnel server for full data sovereignty — ideal for regulated industries or private infrastructure.</p>
+
+  <h2>Why self-host?</h2>
+  <ul>
+    <li>Form data <strong>never leaves</strong> your network.</li>
+    <li>No dependence on an external service.</li>
+    <li>Add authentication with a shared secret.</li>
+    <li>Pin port ranges for firewall rules.</li>
+  </ul>
+
+  <h2>Install bore on your server</h2>
+  <div class="code-block">
+    <div class="code-header"><div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div><span class="lang">bash</span></div>
+    <pre><span class="cmt"># Option A — download pre-built binary</span>
+wget https://github.com/ekzhang/bore/releases/download/v0.6.0/bore-v0.6.0-x86_64-unknown-linux-musl.tar.gz
+tar -xzf bore-v0.6.0-x86_64-unknown-linux-musl.tar.gz
+sudo mv bore /usr/local/bin/
+
+<span class="cmt"># Option B — build from source (requires Rust)</span>
+cargo install bore-cli</pre>
+  </div>
+
+  <h2>Run the server</h2>
+  <div class="code-block">
+    <div class="code-header"><div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div><span class="lang">bash</span></div>
+    <pre><span class="cmt"># Basic</span>
+bore server --bind-addr 0.0.0.0
+
+<span class="cmt"># With authentication</span>
+bore server --bind-addr 0.0.0.0 --secret your-secret-key
+
+<span class="cmt"># Restrict allowed port range</span>
+bore server --bind-addr 0.0.0.0 --min-port 10000 --max-port 20000</pre>
+  </div>
+
+  <h2>Run as a systemd service</h2>
+  <p>Create <code>/etc/systemd/system/bore.service</code>:</p>
+  <div class="code-block">
+    <div class="code-header"><div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div><span class="lang">ini</span></div>
+    <pre>[Unit]
+Description=Bore Tunnel Server
+After=network.target
+
+[Service]
+Type=simple
+User=bore
+ExecStart=/usr/local/bin/bore server --bind-addr 0.0.0.0 --secret YOUR_SECRET
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target</pre>
+  </div>
+  <div class="code-block">
+    <div class="code-header"><div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div><span class="lang">bash</span></div>
+    <pre>sudo systemctl enable bore
+sudo systemctl start bore
+sudo systemctl status bore</pre>
+  </div>
+
+  <h2>Use it in your workflow</h2>
+  <div class="code-block">
+    <div class="code-header"><div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div><span class="lang">yaml</span></div>
+    <pre><span class="tag">with:</span>
+  <span class="tag">bore-server:</span> <span class="str">'tunnel.yourcompany.com'</span>
+  <span class="tag">bore-secret:</span> <span class="str">${{ secrets.BORE_SECRET }}</span></pre>
+  </div>
+
+  <div class="callout warn">
+    <div class="icon">🔒</div>
+    <div><span class="label">Security</span><br/>
+    Make sure your bore server's port range is allowed by your firewall, and that the <code>BORE_SECRET</code> is stored as an encrypted GitHub secret — never hardcoded in workflow files.</div>
+  </div>
+
+  <div class="footer">
+    <span>Next: <a href="#" onclick="nav('advanced')">Advanced Patterns →</a></span>
+    <span></span>
+  </div>
+</section>
+
+<!-- ─────────── ADVANCED ─────────── -->
+<section class="page" id="page-advanced">
+  <h1>Advanced <span class="accent">Patterns</span></h1>
+  <p class="page-subtitle">Multi-job pipelines, conditional branches, dynamic fields, and file processing.</p>
+
+  <h2>Passing outputs across jobs</h2>
+  <p>GitHub Actions scopes outputs per-job. To use interactive values in a downstream job, declare them as job-level outputs:</p>
+  <div class="code-block">
+    <div class="code-header"><div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div><span class="lang">yaml</span></div>
+    <pre><span class="kw">jobs:</span>
+  <span class="tag">get-inputs:</span>
+    <span class="tag">runs-on:</span> <span class="str">ubuntu-latest</span>
+    <span class="tag">outputs:</span>
+      environment: <span class="str">${{ steps.interactive.outputs.environment }}</span>
+      version:     <span class="str">${{ steps.interactive.outputs.version }}</span>
+    <span class="tag">steps:</span>
+      - <span class="tag">id:</span> <span class="str">interactive</span>
+        <span class="tag">uses:</span> <span class="str">pratikwayal01/bore-interactive-inputs@v1.0.2</span>
+        <span class="tag">with:</span>
+          <span class="tag">interactive:</span> <span class="op">|</span>
+            <span class="tag">fields:</span>
+              - <span class="tag">label:</span> <span class="str">environment</span>
+                <span class="tag">properties:</span>
+                  <span class="tag">type:</span> <span class="str">select</span>
+                  <span class="tag">choices:</span> [dev, staging, prod]
+              - <span class="tag">label:</span> <span class="str">version</span>
+                <span class="tag">properties:</span>
+                  <span class="tag">type:</span> <span class="str">text</span>
+
+  <span class="tag">deploy:</span>
+    <span class="tag">needs:</span> <span class="str">get-inputs</span>
+    <span class="tag">runs-on:</span> <span class="str">ubuntu-latest</span>
+    <span class="tag">steps:</span>
+      - <span class="tag">run:</span> <span class="op">|</span>
+          <span class="str">echo "Deploy ${{ needs.get-inputs.outputs.version }} → ${{ needs.get-inputs.outputs.environment }}"</span></pre>
+  </div>
+
+  <h2>Conditional branching</h2>
+  <p>Fan out into different jobs based on user input:</p>
+  <div class="code-block">
+    <div class="code-header"><div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div><span class="lang">yaml</span></div>
+    <pre>  <span class="tag">deploy-dev:</span>
+    <span class="tag">needs:</span> <span class="str">get-inputs</span>
+    <span class="tag">if:</span> <span class="str">needs.get-inputs.outputs.environment == 'dev'</span>
+    <span class="tag">runs-on:</span> <span class="str">ubuntu-latest</span>
+    <span class="tag">steps:</span>
+      - <span class="tag">run:</span> <span class="str">echo "Deploying to dev…"</span>
+
+  <span class="tag">deploy-prod:</span>
+    <span class="tag">needs:</span> <span class="str">get-inputs</span>
+    <span class="tag">if:</span> <span class="str">needs.get-inputs.outputs.environment == 'prod'</span>
+    <span class="tag">runs-on:</span> <span class="str">ubuntu-latest</span>
+    <span class="tag">steps:</span>
+      - <span class="tag">run:</span> <span class="str">echo "Deploying to production…"</span></pre>
+  </div>
+
+  <h2>Processing uploaded files</h2>
+  <div class="code-block">
+    <div class="code-header"><div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div><span class="lang">yaml</span></div>
+    <pre>      - <span class="tag">name:</span> <span class="str">Process uploads</span>
+        <span class="tag">run:</span> <span class="op">|</span>
+          <span class="str">FILE_DIR="${{ steps.interactive.outputs.migration-scripts }}"</span>
+
+          <span class="kw">if</span> [ -d "$FILE_DIR" ]; then
+            <span class="kw">for</span> file <span class="kw">in</span> "$FILE_DIR"/*; do
+              echo "Running: $file"
+              psql -f "$file"   <span class="cmt"># example: apply SQL migration</span>
+            done
+          <span class="kw">else</span>
+            echo "No files uploaded"
+          fi</pre>
+  </div>
+
+  <h2>Dynamic choices from a previous step</h2>
+  <p>Generate your select options at runtime:</p>
+  <div class="code-block">
+    <div class="code-header"><div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div><span class="lang">yaml</span></div>
+    <pre>      - <span class="tag">name:</span> <span class="str">Fetch available tags</span>
+        <span class="tag">id:</span> <span class="str">tags</span>
+        <span class="tag">run:</span> <span class="op">|</span>
+          <span class="cmt"># Pull tags from your API / git / anywhere</span>
+          <span class="str">TAGS='["v1.0.0", "v1.1.0", "v2.0.0"]'</span>
+          echo "tags=$TAGS" >> $GITHUB_OUTPUT
+
+      - <span class="tag">name:</span> <span class="str">Pick a version</span>
+        <span class="tag">uses:</span> <span class="str">pratikwayal01/bore-interactive-inputs@v1.0.2</span>
+        <span class="tag">with:</span>
+          <span class="tag">interactive:</span> <span class="op">|</span>
+            <span class="tag">fields:</span>
+              - <span class="tag">label:</span> <span class="str">version</span>
+                <span class="tag">properties:</span>
+                  <span class="tag">type:</span> <span class="str">select</span>
+                  <span class="tag">choices:</span> <span class="str">${{ steps.tags.outputs.tags }}</span></pre>
+  </div>
+
+  <h2>Multi-step approval flow</h2>
+  <p>Chain two interactive actions: first a quick confirm, then the full config form.</p>
+  <div class="code-block">
+    <div class="code-header"><div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div><span class="lang">yaml</span></div>
+    <pre">  <span class="tag">confirm:</span>
+    <span class="tag">runs-on:</span> <span class="str">ubuntu-latest</span>
+    <span class="tag">outputs:</span>
+      proceed: <span class="str">${{ steps.ask.outputs.proceed }}</span>
+    <span class="tag">steps:</span>
+      - <span class="tag">id:</span> <span class="str">ask</span>
+        <span class="tag">uses:</span> <span class="str">pratikwayal01/bore-interactive-inputs@v1.0.2</span>
+        <span class="tag">with:</span>
+          <span class="tag">title:</span> <span class="str">"Step 1 — Confirm"</span>
+          <span class="tag">interactive:</span> <span class="op">|</span>
+            <span class="tag">fields:</span>
+              - <span class="tag">label:</span> <span class="str">proceed</span>
+                <span class="tag">properties:</span>
+                  <span class="tag">display:</span> <span class="str">Proceed with deployment?</span>
+                  <span class="tag">type:</span>    <span class="str">boolean</span>
+
+  <span class="tag">configure:</span>
+    <span class="tag">needs:</span> <span class="str">confirm</span>
+    <span class="tag">if:</span> <span class="str">needs.confirm.outputs.proceed == 'true'</span>
+    <span class="tag">runs-on:</span> <span class="str">ubuntu-latest</span>
+    <span class="tag">steps:</span>
+      - <span class="tag">uses:</span> <span class="str">pratikwayal01/bore-interactive-inputs@v1.0.2</span>
+        <span class="tag">with:</span>
+          <span class="tag">title:</span> <span class="str">"Step 2 — Configuration"</span>
+          <span class="tag">interactive:</span> <span class="op">|</span>
+            <span class="tag">fields:</span>
+              - <span class="tag">label:</span> <span class="str">environment</span>
+                <span class="tag">properties:</span>
+                  <span class="tag">type:</span>    <span class="str">select</span>
+                  <span class="tag">choices:</span> [staging, production]</pre>
+  </div>
+
+  <div class="footer">
+    <span>Next: <a href="#" onclick="nav('troubleshoot')">Troubleshooting →</a></span>
+    <span></span>
+  </div>
+</section>
+
+<!-- ─────────── TROUBLESHOOTING ─────────── -->
+<section class="page" id="page-troubleshoot">
+  <h1><span class="accent">Troubleshooting</span></h1>
+  <p class="page-subtitle">Common issues and exactly how to fix them.</p>
+
+  <div class="trouble">
+    <div class="trouble-q">Portal URL is not loading</div>
+    <div class="trouble-a">
+      <ul>
+        <li>Verify the bore server is running and reachable from the internet.</li>
+        <li>Check that your firewall allows the randomly assigned port (or the one you pinned with <code>bore-port</code>).</li>
+        <li>Try switching to <code>bore.pub</code> to rule out a self-hosted config issue.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="trouble">
+    <div class="trouble-q">Workflow times out before I can submit</div>
+    <div class="trouble-a">
+      <ul>
+        <li>Increase the timeout: <code>timeout: 600</code> (10 min).</li>
+        <li>Enable Slack/Discord notifications so you're alerted as soon as the form is ready.</li>
+        <li>For ultra-simple cases, consider plain <code>workflow_dispatch</code> inputs instead.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="trouble">
+    <div class="trouble-q">Outputs are empty in the next step</div>
+    <div class="trouble-a">
+      <ul>
+        <li>Make sure your step has an <code>id</code> and you're referencing it correctly: <code>${{ steps.&lt;your-id&gt;.outputs.&lt;label&gt; }}</code>.</li>
+        <li>The <code>&lt;label&gt;</code> in your output reference must match the <code>label</code> in your field YAML exactly (case-sensitive).</li>
+        <li>Check the action logs — if you see <em>"Results written to …"</em> but no <em>"✓ All outputs set successfully"</em>, the <code>set_outputs.py</code> step failed.</li>
+        <li>To pass outputs to a <strong>different job</strong>, you must declare job-level <code>outputs:</code>. See <a href="#" onclick="nav('advanced')">Advanced Patterns</a>.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="trouble">
+    <div class="trouble-q">Files not uploading or not found</div>
+    <div class="trouble-a">
+      <ul>
+        <li>Verify the <code>acceptedFileTypes</code> match the file you're uploading (use wildcards like <code>image/*</code>).</li>
+        <li>The output is a <strong>directory path</strong>, not a file — iterate with a loop (see <a href="#" onclick="nav('advanced')">Advanced Patterns</a>).</li>
+        <li>Large files may hit the default Flask upload limit. This can be raised in a future release.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="trouble">
+    <div class="trouble-q">Slack notification not received</div>
+    <div class="trouble-a">
+      <ul>
+        <li>Token must start with <code>xoxb-</code>. Check you copied the <em>Bot User OAuth Token</em>, not the user token.</li>
+        <li>The bot must have <code>chat:write</code> and <code>chat:write.customize</code> scopes.</li>
+        <li>The bot must be <strong>invited to the channel</strong> — just adding the app to the workspace isn't enough.</li>
+        <li>Double-check the channel name includes the <code>#</code> prefix.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="trouble">
+    <div class="trouble-q">Discord webhook not working</div>
+    <div class="trouble-a">
+      <ul>
+        <li>Paste the full URL into your browser — if you get a <em>405 Method Not Allowed</em>, it's valid but expects a POST.</li>
+        <li>Check the webhook wasn't deleted in Discord.</li>
+        <li>Test manually: <code>curl -X POST "$WEBHOOK_URL" -H "Content-Type: application/json" -d '{"content":"test"}'</code></li>
+        <li>Thread IDs must be numeric strings — don't confuse them with channel IDs.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="footer">
+    <span>Next: <a href="#" onclick="nav('why')">Why Bore? →</a></span>
+    <span></span>
+  </div>
+</section>
+
+<!-- ─────────── WHY BORE ─────────── -->
+<section class="page" id="page-why">
+  <h1>Why <span class="accent">Bore?</span></h1>
+  <p class="page-subtitle">How this action compares to the alternatives — and why you might switch.</p>
+
+  <h2>bore-interactive-inputs vs interactive-inputs</h2>
+  <div class="compare-row">
+    <div class="compare-card">
+      <h4>interactive-inputs (ngrok)</h4>
+      <ul>
+        <li>Written in TypeScript</li>
+        <li>Requires an ngrok account + authtoken</li>
+        <li>Free tier has usage limits</li>
+        <li>Cannot be self-hosted</li>
+        <li>Pro plan costs $10–20/mo per user</li>
+      </ul>
+    </div>
+    <div class="compare-card highlight">
+      <h4>bore-interactive-inputs (bore)</h4>
+      <ul>
+        <li>Written in Python — easy to maintain</li>
+        <li>Zero signup — <code>bore.pub</code> works out of the box</li>
+        <li>No usage limits on public server</li>
+        <li>Fully self-hostable on your own infra</li>
+        <li>Self-hosted cost: ~$5/mo VPS, no per-user fees</li>
+      </ul>
+    </div>
+  </div>
+
+  <h2>Feature comparison</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Feature</th><th>interactive-inputs</th><th>bore-interactive-inputs</th></tr></thead>
+      <tbody>
+        <tr><td>Text / number / boolean inputs</td><td><span class="badge yes">Yes</span></td><td><span class="badge yes">Yes</span></td></tr>
+        <tr><td>Select & multi-select</td><td><span class="badge yes">Yes</span></td><td><span class="badge yes">Yes</span></td></tr>
+        <tr><td>File uploads</td><td><span class="badge yes">Yes</span></td><td><span class="badge yes">Yes</span></td></tr>
+        <tr><td>Slack notifications</td><td><span class="badge yes">Yes</span></td><td><span class="badge yes">Yes</span></td></tr>
+        <tr><td>Discord notifications</td><td><span class="badge yes">Yes</span></td><td><span class="badge yes">Yes</span></td></tr>
+        <tr><td>Self-hostable tunnel</td><td><span class="badge no">No</span></td><td><span class="badge yes">Yes</span></td></tr>
+        <tr><td>No external signup needed</td><td><span class="badge no">No</span></td><td><span class="badge yes">Yes</span></td></tr>
+        <tr><td>Python codebase</td><td><span class="badge no">No</span></td><td><span class="badge yes">Yes</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>Migration from interactive-inputs</h2>
+  <p>Switching is a one-line change — the <code>interactive</code> field YAML is identical:</p>
+  <div class="code-block">
+    <div class="code-header"><div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div><span class="lang">yaml — diff</span></div>
+    <pre><span class="cmt"># Before</span>
+- <span class="tag">uses:</span> <span class="str">boasiHQ/interactive-inputs@v2</span>
+  <span class="tag">with:</span>
+    <span class="tag">ngrok-authtoken:</span> <span class="str">${{ secrets.NGROK_AUTHTOKEN }}</span>
+
+<span class="cmt"># After</span>
+- <span class="tag">uses:</span> <span class="str">pratikwayal01/bore-interactive-inputs@v1.0.2</span>
+  <span class="tag">with:</span>
+    <span class="tag">bore-server:</span> <span class="str">'bore.pub'</span></pre>
+  </div>
+  <p>That's it. All your field definitions, labels, and output references stay exactly the same.</p>
+
+  <h2>Who should use this?</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Scenario</th><th>Recommendation</th></tr></thead>
+      <tbody>
+        <tr><td>Already on ngrok, happy with it</td><td>Stick with interactive-inputs — no reason to change.</td></tr>
+        <tr><td>Want zero external dependencies</td><td><span class="badge yes">Use bore-interactive-inputs</span></td></tr>
+        <tr><td>Regulated / compliance environment</td><td><span class="badge yes">Use bore-interactive-inputs</span> + self-host</td></tr>
+        <tr><td>Open-source project, no paid services</td><td><span class="badge yes">Use bore-interactive-inputs</span> with <code>bore.pub</code></td></tr>
+        <tr><td>DevOps team familiar with Python</td><td><span class="badge yes">Use bore-interactive-inputs</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="footer">
+    <span>bore-interactive-inputs v1.0.0 · MIT License</span>
+    <span><a href="https://github.com" target="_blank">GitHub ↗</a></span>
+  </div>
+</section>
+
+</div><!-- /content -->
+</main>
+
+<!-- ═══════════════════════════ JS ═══════════════════════════ -->
+<script>
+const pages = ['home','quickstart','inputs','fieldtypes','notifications','selfhost','advanced','troubleshoot','why'];
+
+function nav(id) {
+  // hide all pages
+  pages.forEach(p => {
+    const el = document.getElementById('page-' + p);
+    if (el) el.classList.remove('active');
+  });
+  // show target
+  const target = document.getElementById('page-' + id);
+  if (target) target.classList.add('active');
+
+  // sidebar active state
+  pages.forEach(p => {
+    const sb = document.getElementById('sb-' + p);
+    if (sb) sb.classList.toggle('active', p === id);
+  });
+
+  // header nav
+  document.getElementById('nav-home').classList.toggle('active', id === 'home');
+
+  // scroll to top of content
+  document.querySelector('.main').scrollTop = 0;
+  window.scrollTo(0, 0);
+
+  return false; // prevent hash jump
+}
+
+// initial state already set via class="active" on #page-home and #sb-home
+</script>
+</body>
+</html>

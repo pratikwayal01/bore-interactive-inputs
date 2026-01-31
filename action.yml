@@ -1,6 +1,6 @@
 name: 'Bore Interactive Inputs'
 description: 'Enable dynamic runtime inputs for GitHub Actions using self-hosted bore tunnel'
-author: 'Your Name'
+author: 'Pratik Wayal'
 
 branding:
   icon: 'terminal'
