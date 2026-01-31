@@ -11,7 +11,7 @@ inputs:
     description: 'The title of the interactive inputs form'
     required: false
     default: 'Interactive Inputs'
-  
+
   interactive:
     description: 'The representation (in yaml) of fields to be displayed'
     required: true
@@ -23,122 +23,145 @@ inputs:
             type: text
             description: A simple text input
             required: true
-  
+
   timeout:
     description: 'The timeout in seconds for the interactive inputs form'
     required: false
     default: '300'
-  
+
   bore-server:
     description: 'The address of the bore server (e.g., bore.pub or your self-hosted server)'
     required: true
     default: 'bore.pub'
-  
+
   bore-port:
     description: 'Optional specific port to request on the bore server'
     required: false
     default: '0'
-  
+
   bore-secret:
     description: 'Optional secret for authentication with bore server'
     required: false
     default: ''
-  
+
   github-token:
     description: 'The token used to authenticate with GitHub API'
     required: true
     default: ${{ github.token }}
-  
+
   notifier-slack-enabled:
     description: 'Whether to send a notification to Slack'
     required: false
     default: 'false'
-  
+
   notifier-slack-token:
     description: 'The token used to authenticate with Slack API'
     required: false
     default: ''
-  
+
   notifier-slack-channel:
     description: 'The channel to send the notification to'
     required: false
     default: '#notifications'
-  
+
   notifier-slack-thread-ts:
     description: 'The timestamp of the message to reply to in the thread'
     required: false
     default: ''
-  
+
   notifier-slack-bot:
     description: 'The name of the bot to send the notification as'
     required: false
     default: 'Bore Interactive Inputs'
-  
+
   notifier-discord-enabled:
     description: 'Whether to send a notification to Discord'
     required: false
     default: 'false'
-  
+
   notifier-discord-webhook:
     description: 'The webhook URL used to send notifications to Discord'
     required: false
     default: ''
-  
+
   notifier-discord-thread-id:
     description: 'The ID of the Discord thread the message should be sent to'
     required: false
     default: ''
-  
+
   notifier-discord-username:
     description: 'The username to send the notifications as'
     required: false
     default: 'Bore Interactive Inputs'
 
+# ---------------------------------------------------------------------------
+# Outputs – every key the caller might want.
+# Each one maps from the "set-outputs" step inside this composite action.
+# ---------------------------------------------------------------------------
+outputs:
+  text-input:
+    description: 'Value of the text-input field'
+    value: ${{ steps.set-outputs.outputs.text-input }}
+  textarea-input:
+    description: 'Value of the textarea-input field'
+    value: ${{ steps.set-outputs.outputs.textarea-input }}
+  number-input:
+    description: 'Value of the number-input field'
+    value: ${{ steps.set-outputs.outputs.number-input }}
+  boolean-input:
+    description: 'Value of the boolean-input field'
+    value: ${{ steps.set-outputs.outputs.boolean-input }}
+  select-input:
+    description: 'Value of the select-input field'
+    value: ${{ steps.set-outputs.outputs.select-input }}
+  multiselect-input:
+    description: 'Value of the multiselect-input field'
+    value: ${{ steps.set-outputs.outputs.multiselect-input }}
+  file-input:
+    description: 'Path to the uploaded file directory'
+    value: ${{ steps.set-outputs.outputs.file-input }}
+  multifile-input:
+    description: 'Path to the uploaded files directory'
+    value: ${{ steps.set-outputs.outputs.multifile-input }}
+
 runs:
   using: 'composite'
   steps:
+    # ------------------------------------------------------------------
+    # 1. Install dependencies (silent)
+    # ------------------------------------------------------------------
     - name: Setup Python
       uses: actions/setup-python@v5
       with:
         python-version: '3.11'
-    
+
     - name: Install Python dependencies
       shell: bash
       run: |
         pip install --break-system-packages flask pyyaml requests > /dev/null 2>&1
         echo "✓ Python dependencies installed"
-    
+
+    # ------------------------------------------------------------------
+    # 2. Install bore (silent)
+    # ------------------------------------------------------------------
     - name: Install bore client
       shell: bash
       run: |
-        # Download and install bore CLI
         BORE_VERSION="0.6.0"
         ARCH=$(uname -m)
         OS=$(uname -s | tr '[:upper:]' '[:lower:]')
-        
-        if [ "$ARCH" = "x86_64" ]; then
-          ARCH="x86_64"
-        elif [ "$ARCH" = "aarch64" ] || [ "$ARCH" = "arm64" ]; then
-          ARCH="aarch64"
-        fi
-        
-        if [ "$OS" = "darwin" ]; then
-          OS="apple-darwin"
-        else
-          OS="unknown-linux-musl"
-        fi
-        
-        DOWNLOAD_URL="https://github.com/ekzhang/bore/releases/download/v${BORE_VERSION}/bore-v${BORE_VERSION}-${ARCH}-${OS}.tar.gz"
-        
-        echo "Downloading bore ${BORE_VERSION}..."
-        curl -sL "$DOWNLOAD_URL" -o bore.tar.gz
-        tar -xzf bore.tar.gz
-        chmod +x bore
-        sudo mv bore /usr/local/bin/
-        rm bore.tar.gz
-        
+
+        [ "$ARCH" = "aarch64" ] || [ "$ARCH" = "arm64" ] && ARCH="aarch64" || ARCH="x86_64"
+        [ "$OS" = "darwin" ] && OS="apple-darwin" || OS="unknown-linux-musl"
+
+        curl -sL "https://github.com/ekzhang/bore/releases/download/v${BORE_VERSION}/bore-v${BORE_VERSION}-${ARCH}-${OS}.tar.gz" -o bore.tar.gz
+        tar -xzf bore.tar.gz && chmod +x bore && sudo mv bore /usr/local/bin/ && rm bore.tar.gz
         echo "✓ Bore $(bore --version) installed"
-    
+
+    # ------------------------------------------------------------------
+    # 3. Run the Python server + bore tunnel.
+    #    Python writes results to /tmp/bore-interactive-results.json
+    # ------------------------------------------------------------------
     - name: Run Interactive Inputs Server
       shell: bash
       env:
@@ -165,3 +188,43 @@ runs:
         GITHUB_SERVER_URL: ${{ github.server_url }}
       run: |
         python ${{ github.action_path }}/src/main.py
+
+    # ------------------------------------------------------------------
+    # 4. Read the JSON file and echo every key into $GITHUB_OUTPUT.
+    #    This is the ONLY step whose outputs are visible to the caller.
+    # ------------------------------------------------------------------
+    - name: Set Outputs
+      id: set-outputs
+      shell: bash
+      run: |
+        RESULTS="/tmp/bore-interactive-results.json"
+
+        if [ ! -f "$RESULTS" ]; then
+          echo "⚠ No results file found – form was not submitted"
+          exit 1
+        fi
+
+        echo "──────────────────────────────────────"
+        echo "Setting outputs from $RESULTS"
+        echo "──────────────────────────────────────"
+
+        # Python reads the JSON and writes key=value lines
+        # directly into $GITHUB_OUTPUT — no pipe, no subshell.
+        python3 -c "
+import json, os
+
+results_file = '/tmp/bore-interactive-results.json'
+github_output = os.environ['GITHUB_OUTPUT']
+
+with open(results_file) as f:
+    data = json.load(f)
+
+with open(github_output, 'a') as out:
+    for key, value in data.items():
+        line = f'{key}={value}'
+        out.write(line + '\n')
+        print(f'  ✓ {line}')
+"
+
+        echo "──────────────────────────────────────"
+        echo "✓ All outputs set successfully"

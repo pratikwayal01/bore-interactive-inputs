@@ -251,48 +251,34 @@ class InteractiveInputsAction:
             self.cleanup()
     
     def set_outputs(self, results: Dict[str, Any]):
-        """Set GitHub Action outputs using echo commands"""
-        github_output = os.getenv('GITHUB_OUTPUT')
-        if not github_output:
-            print("Warning: GITHUB_OUTPUT not set")
-            return
-        
-        print(f"\n[outputs] Setting GitHub Action outputs...")
-        sys.stdout.flush()
-        
+        """
+        Write results to a JSON file.
+        The composite action's final shell step reads this file
+        and does: echo "key=value" >> $GITHUB_OUTPUT
+        so the outputs actually bubble up to the caller workflow.
+        """
+        results_file = '/tmp/bore-interactive-results.json'
+
+        # Normalise every value to a plain string
+        serialised = {}
         for key, value in results.items():
-            # Handle different value types
-            if isinstance(value, list):
-                # For lists (like multiselect), convert to JSON
-                value_str = json.dumps(value)
-            elif isinstance(value, dict):
-                value_str = json.dumps(value)
+            if isinstance(value, (list, dict)):
+                serialised[key] = json.dumps(value)
             elif isinstance(value, bool):
-                value_str = str(value).lower()
+                serialised[key] = str(value).lower()
             elif value is None:
-                value_str = ''
+                serialised[key] = ''
             else:
-                value_str = str(value)
-            
-            # For multiline values, use heredoc format
-            if '\n' in value_str:
-                # Use heredoc for multiline
-                with open(github_output, 'a') as f:
-                    delimiter = 'EOF'
-                    f.write(f"{key}<<{delimiter}\n{value_str}\n{delimiter}\n")
-            else:
-                # Use simple format for single line
-                # Escape special characters for shell
-                value_str_escaped = value_str.replace('\\', '\\\\').replace('"', '\\"').replace('$', '\\$')
-                
-                # Write directly to GITHUB_OUTPUT file
-                with open(github_output, 'a') as f:
-                    f.write(f'{key}={value_str}\n')
-            
-            # Show what was set (truncate long values)
-            display_value = value_str[:80] + '...' if len(value_str) > 80 else value_str
-            print(f"[outputs] ✓ {key} = {display_value}")
-            sys.stdout.flush()
+                serialised[key] = str(value)
+
+        with open(results_file, 'w') as f:
+            json.dump(serialised, f)
+
+        print(f"\n[outputs] Results written to {results_file}")
+        for key, val in serialised.items():
+            display = val[:80] + '...' if len(val) > 80 else val
+            print(f"[outputs] ✓ {key} = {display}")
+        sys.stdout.flush()
     
     def cleanup(self):
         """Cleanup resources"""
