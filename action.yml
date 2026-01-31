@@ -196,35 +196,4 @@ runs:
     - name: Set Outputs
       id: set-outputs
       shell: bash
-      run: |
-        RESULTS="/tmp/bore-interactive-results.json"
-
-        if [ ! -f "$RESULTS" ]; then
-          echo "⚠ No results file found – form was not submitted"
-          exit 1
-        fi
-
-        echo "──────────────────────────────────────"
-        echo "Setting outputs from $RESULTS"
-        echo "──────────────────────────────────────"
-
-        # Python reads the JSON and writes key=value lines
-        # directly into $GITHUB_OUTPUT — no pipe, no subshell.
-        python3 -c "
-import json, os
-
-results_file = '/tmp/bore-interactive-results.json'
-github_output = os.environ['GITHUB_OUTPUT']
-
-with open(results_file) as f:
-    data = json.load(f)
-
-with open(github_output, 'a') as out:
-    for key, value in data.items():
-        line = f'{key}={value}'
-        out.write(line + '\n')
-        print(f'  ✓ {line}')
-"
-
-        echo "──────────────────────────────────────"
-        echo "✓ All outputs set successfully"
+      run: python3 ${{ github.action_path }}/src/set_outputs.py
